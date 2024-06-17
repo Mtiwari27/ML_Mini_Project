@@ -41,7 +41,7 @@ def main():
     st.title('Telecom Churn Prediction App')
     st.markdown("---")
 
-    st.image('model_Comp.png', use_column_width=True)
+    st.image('App/model_Comp.png', use_column_width=True)
 
     model_name = st.sidebar.selectbox('Select Model', list(MODEL_PATHS.keys()))
 
