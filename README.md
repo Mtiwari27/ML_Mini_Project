@@ -2,4 +2,4 @@
 
 ## App URL :- 
 
-https://mlminiproject-rmpfhusbrdc7pycbsbsh5x.streamlit.app/
+https://mlminiproject-ktqt6wezexgyubjhwdzwj8.streamlit.app/
