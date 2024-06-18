@@ -10,7 +10,6 @@ MODEL_PATHS = {
 'Random Forest': "Model/model_rf.pkl"
 }
 
-Load the selected model
 def load_model(model_name):
 with open(MODEL_PATHS[model_name], 'rb') as file:
 model = pickle.load(file)
@@ -18,7 +17,6 @@ return model
 
 model = load_model('XGBoost')
 
-Define function to preprocess data
 def preprocess_data(data):
 # Encode categorical variables
 label_encoders = {}
@@ -27,7 +25,6 @@ label_encoders[col] = LabelEncoder()
 data[col] = label_encoders[col].fit_transform(data[col])
 return data
 
-Define function to make predictions
 def predict_churn(data):
 # Preprocess the input data
 data = preprocess_data(data)
@@ -35,15 +32,10 @@ data = preprocess_data(data)
 prediction = model.predict(data)
 return prediction
 
-Write the Streamlit app
 def main():
 st.title('Telecom Churn Prediction App')
 st.markdown("---")
-
-less
-Copy code
 st.image('App/model_Comp.png', use_column_width=True)
-
 model_name = st.sidebar.selectbox('Select Model', list(MODEL_PATHS.keys()))
 
 # Load the selected model
@@ -108,4 +100,4 @@ if st.button('Predict'):
     else:
         st.error('This customer is predicted to churn.')
 if name == 'main':
-main() this is my app
+main()
