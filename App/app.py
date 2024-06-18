@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+import os
 
 MODEL_PATHS = {
     'XGBoost': "Model/model_xgb.pkl",
@@ -10,14 +11,23 @@ MODEL_PATHS = {
     'Random Forest': "Model/model_rf.pkl"
 }
 
+# Custom Unpickler to handle potential attribute errors
+class CustomUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'sklearn.metrics._scorer' and name == '_PredictScorer':
+            from sklearn.metrics import get_scorer
+            return get_scorer
+        return super().find_class(module, name)
+
 # Load the selected model
 def load_model(model_name):
-    with open(MODEL_PATHS[model_name], 'rb') as file:
-        model = pickle.load(file)
-    return model
-
-
-model = load_model('XGBoost')
+    try:
+        with open(MODEL_PATHS[model_name], 'rb') as file:
+            model = CustomUnpickler(file).load()
+        return model
+    except Exception as e:
+        st.error(f"Error loading model {model_name}: {e}")
+        return None
 
 # Define function to preprocess data
 def preprocess_data(data):
@@ -47,6 +57,8 @@ def main():
 
     # Load the selected model
     model = load_model(model_name)
+    if model is None:
+        return  # If model loading fails, stop the execution
 
     # Create input fields for user to input data
     st.sidebar.header('Input Features')
@@ -98,7 +110,6 @@ def main():
         'Customer service calls': [customer_service_calls]
     })
 
-    # st.markdown("---")
     # Make prediction when user clicks a button
     if st.button('Predict'):
         prediction = predict_churn(user_data)
