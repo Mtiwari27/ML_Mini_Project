@@ -11,12 +11,21 @@ MODEL_PATHS = {
     'Random Forest': "Model/model_rf.pkl"
 }
 
-# Custom Unpickler to handle potential attribute errors
+# Custom Unpickler to handle potential attribute errors and function issues
 class CustomUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
-        if module == 'sklearn.metrics._scorer' and name == '_PredictScorer':
-            from sklearn.metrics import get_scorer
-            return get_scorer
+        if module == 'sklearn.svm._classes' and name == 'SVC':
+            from sklearn.svm import SVC
+            return SVC
+        if module == 'sklearn.linear_model._logistic' and name == 'LogisticRegression':
+            from sklearn.linear_model import LogisticRegression
+            return LogisticRegression
+        if module == 'sklearn.ensemble._forest' and name == 'RandomForestClassifier':
+            from sklearn.ensemble import RandomForestClassifier
+            return RandomForestClassifier
+        if module == 'xgboost.sklearn' and name == 'XGBClassifier':
+            from xgboost import XGBClassifier
+            return XGBClassifier
         return super().find_class(module, name)
 
 # Load the selected model
@@ -25,6 +34,9 @@ def load_model(model_name):
         with open(MODEL_PATHS[model_name], 'rb') as file:
             model = CustomUnpickler(file).load()
         return model
+    except pickle.UnpicklingError:
+        st.error(f"Error loading model {model_name}: Unpickling error. The file might be corrupted.")
+        return None
     except Exception as e:
         st.error(f"Error loading model {model_name}: {e}")
         return None
