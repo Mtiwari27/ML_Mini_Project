@@ -9,59 +9,66 @@ MODEL_PATHS = {
     'Random Forest': "Model/model_rf.pkl"
 }
 
+EXPECTED_COLUMNS = [
+    'State', 'Account length', 'Area code',
+    'International plan', 'Voice mail plan',
+    'Number vmail messages',
+    'Total day minutes', 'Total day calls', 'Total day charge',
+    'Total eve minutes', 'Total eve calls', 'Total eve charge',
+    'Total night minutes', 'Total night calls', 'Total night charge',
+    'Total intl minutes', 'Total intl calls', 'Total intl charge',
+    'Customer service calls'
+]
+
 # -------------------------------
-# Load Model
+# Load Model (Pickle)
 # -------------------------------
 @st.cache_resource
 def load_model(model_name):
     with open(MODEL_PATHS[model_name], 'rb') as file:
-        model = pickle.load(file)
-    return model
-
+        return pickle.load(file)
 
 # -------------------------------
 # Preprocess Data
 # -------------------------------
 def preprocess_data(data):
-    # Manual encoding (must match training encoding)
-    # Assuming during training:
-    # Yes = 1, No = 0
 
+    # Encode Yes/No exactly like training
     data['International plan'] = data['International plan'].map({'Yes': 1, 'No': 0})
     data['Voice mail plan'] = data['Voice mail plan'].map({'Yes': 1, 'No': 0})
 
-    # If State was label encoded during training,
-    # you MUST load the same encoder.
-    # For now we assume states were already numeric.
-    # If not, remove State or properly encode it.
+    # Ensure correct column order
+    data = data[EXPECTED_COLUMNS]
 
     return data
 
-
 # -------------------------------
-# Prediction Function
+# Prediction
 # -------------------------------
 def predict_churn(data, model):
     data = preprocess_data(data)
-    prediction = model.predict(data)
-    return prediction
-
+    return model.predict(data)
 
 # -------------------------------
-# Streamlit UI
+# Streamlit App
 # -------------------------------
 def main():
-    st.title('Telecom Churn Prediction App')
+
+    st.title("Telecom Churn Prediction App")
     st.markdown("---")
 
-    model_name = st.sidebar.selectbox('Select Model', list(MODEL_PATHS.keys()))
+    model_name = st.sidebar.selectbox(
+        "Select Model",
+        list(MODEL_PATHS.keys())
+    )
+
     model = load_model(model_name)
 
-    st.sidebar.header('Input Features')
+    st.sidebar.header("Input Features")
 
     state = st.sidebar.text_input('State', '')
-    account_length = st.sidebar.number_input('Account Length', min_value=1, step=1)
-    area_code = st.sidebar.number_input('Area Code', min_value=100, max_value=999, step=1)
+    account_length = st.sidebar.number_input('Account Length', min_value=1)
+    area_code = st.sidebar.number_input('Area Code', min_value=100, max_value=999)
     international_plan = st.sidebar.selectbox('International Plan', ['Yes', 'No'])
     voice_mail_plan = st.sidebar.selectbox('Voice Mail Plan', ['Yes', 'No'])
     number_vmail_messages = st.sidebar.number_input('Number of Voicemail Messages', min_value=0)
@@ -89,7 +96,6 @@ def main():
     st.sidebar.header('Customer Service')
     customer_service_calls = st.sidebar.number_input('Customer Service Calls', min_value=0)
 
-    # Create DataFrame
     user_data = pd.DataFrame({
         'State': [state],
         'Account length': [account_length],
@@ -112,19 +118,18 @@ def main():
         'Customer service calls': [customer_service_calls]
     })
 
-    if st.button('Predict'):
+    if st.button("Predict"):
         try:
             prediction = predict_churn(user_data, model)
 
             if prediction[0] == 0:
-                st.success('This customer is predicted to stay.')
+                st.success("Customer is predicted to STAY.")
             else:
-                st.error('This customer is predicted to churn.')
+                st.error("Customer is predicted to CHURN.")
 
         except Exception as e:
-            st.error("Prediction failed. Check model features & encoding.")
+            st.error("Prediction failed.")
             st.write(e)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
